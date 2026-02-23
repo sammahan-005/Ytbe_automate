@@ -7,7 +7,8 @@ import pyttsx3
 from google import genai
 from moviepy import *
 from random import shuffle
-from moviepy.video import fx as vfx 
+from moviepy.video import fx as vfx
+import subprocess 
 
 
 
@@ -76,14 +77,12 @@ def reform_transcription(mon_contenu):
         Purpose: 
         Reformuler le texte avec l'API Gemini 2.5 Flash de Google GenAI.
         """
-        nbre_mot=str(len(mon_contenu.split()))
-
-        client = genai.Client(api_key="Your_GenAI_API_Key_Here")
+        
+        client = genai.Client(api_key="AIzaSyCzLiGQwjoQ6arghIzxo-r14LYe_jrXAt4")
         response = client.models.generate_content(
         model="gemini-2.5-flash", 
-        contents="Je t'envois le script du video ytube. J'aimerais que tu reformules son contenu en un paragraphe de " + nbre_mot + " mots.Ce texte sera utilise dans ma propre chaine youtube ayant pour nom:Vie de legende. Parle comme si tu racontais une histoire. Tu as le droit d'utiliser tes propres expressions tout en restant dans l'esprit de la video. Voici le script : " + mon_contenu
+        contents="Je t'envois le script du video youtube. J'aimerais que tu reformules son contenu en un paragraphe de 800 mots, evite les caracteres speciaux.Ce texte sera utilise dans ma propre chaine youtube ayant pour nom:Vie de legende. Parle comme si tu racontais une histoire. Tu as le droit d'utiliser tes propres expressions tout en restant dans l'esprit de la video. Voici le script : " + mon_contenu
         )
-        print(response.text)
         return response.text
 # end def    
     
@@ -140,7 +139,7 @@ def video_modification():
 
     if dureeaudio < final_video.duration:
         final_video = final_video.subclipped(0, dureeaudio)
-        final_video = final_video.set_audio(audio)
+        final_video = final_video.with_audio(audio)
     else:
         final_video = final_video.with_effects([vfx.Loop(duration=dureeaudio)])
         final_video = final_video.with_audio(audio)
@@ -149,5 +148,44 @@ def video_modification():
     
     final_video.write_videofile(video_path.rsplit('.', 1)[0] + '_modified.mp4', codec='libx264', audio_codec='aac')
 
-    
+    video.close()
 
+def nettoyage():
+    """
+    Purpose: Supprimer les fichiers superflus générés lors du processus.
+    """
+    # Supprimer le fichier audio généré
+    os.remove(video_path)
+    os.remove(output_path)
+    print("Fichier vidéo supprimé avec succès.")
+    
+        
+# end def
+
+
+def get_machine_guid():
+    
+    """
+    Purpose:
+    Récupérer le MachineGuid unique de la machine Windows.
+    """
+    result = subprocess.run(
+        [
+            "reg",
+            "query",
+            r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography",
+            "/v",
+            "MachineGuid"
+        ],
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        return "Error"
+
+    for line in result.stdout.splitlines():
+        if "MachineGuid" in line:
+            return line.split()[-1]
+
+    return "Error"
