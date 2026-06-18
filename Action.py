@@ -37,6 +37,7 @@ def main():
         return
 
     # ── Étape 5 : Génération des métadonnées et upload YouTube ──
+    
     print("\n🔍 Génération du titre et de la description pour YouTube...")
     titre, description = generate_metadata(nouveau_texte)
 
